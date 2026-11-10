@@ -63,15 +63,17 @@ def check_one(dim: int, type: str, sample_count: int) -> None:
 	else:
 		equal = np.allclose(orig, new.numpy(), atol=1e-6, rtol=1e-3, equal_nan=True)
 	
-	print(equal)
-	if not equal:
-		print("Original:")
-		print(orig)
-		print("New:")
-		if(new is None):
-			print("None")
-		else:
-			print(new.numpy())
+	print(f"------------------{equal}------------------")
+	print(f"original is none: {oIsNone}")
+	print(f"original is none: {nIsNone}")
+	# if not equal:
+	# 	print("Original:")
+	# 	print(orig)
+	# 	print("New:")
+	# 	if(new is None):
+	# 		print("None")
+	# 	else:
+	# 		print(new.numpy())
 
 	# Store this run's data for later analysis/plotting. We keep everything
 	# needed to reproduce the behaviour: A, the two sample arrays (or None),

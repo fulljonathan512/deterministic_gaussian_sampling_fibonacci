@@ -1,9 +1,9 @@
-"""Plotting utility for the data saved by test.check_one.
+"""Plotting utility for the data saved by test.check_one (2D only).
 
 This script reads the pickled results produced by
 ``deterministic_gaussian_sampling_fibonacci.test`` (see ``RESULTS_FILE`` in
-that module) and plots every two- and three-dimensional sample array found
-there. Each run is given its own colour; within a run, the NumPy-based
+that module) and plots every two-dimensional sample array found there.
+Each run is given its own colour; within a run, the NumPy-based
 implementation (``orig``) and the torch-based implementation (``new``) are
 distinguished by marker style.
 
@@ -13,11 +13,11 @@ Usage examples (from project root)::
     # check_one manually to only create a few entries)
     python -m deterministic_gaussian_sampling_fibonacci.test
 
-    # Then create plots for all 2D/3D results
+    # Then create plots for all 2D results
     python -m deterministic_gaussian_sampling_fibonacci.plot_check_results
 
-The script will open a matplotlib window for 2D results and one for 3D
-results (if any). Close the windows to finish the program.
+The script will open a single matplotlib window for 2D results.
+Close the window to finish the program.
 """
 
 from __future__ import annotations
@@ -28,9 +28,8 @@ from typing import Any, Dict, List
 
 import matplotlib.pyplot as plt
 from matplotlib.widgets import CheckButtons, Button
-from mpl_toolkits.mplot3d.art3d import mcolors
+from matplotlib import colors as mcolors
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401, needed for 3D plotting
 
 
 HERE = os.path.dirname(__file__)
@@ -62,22 +61,15 @@ def _is_2d_points(arr: np.ndarray) -> bool:
     return isinstance(arr, np.ndarray) and arr.ndim == 2 and arr.shape[1] == 2
 
 
-def _is_3d_points(arr: np.ndarray) -> bool:
-    return isinstance(arr, np.ndarray) and arr.ndim == 2 and arr.shape[1] == 3
-
-
 def plot_all_results(results: List[Dict[str, Any]]) -> None:
-    """Plot every 2D/3D array from the given results list.
+    """Plot every 2D array from the given results list.
 
     Each element is expected to be a dict as produced by ``check_one`` in
     ``test.py``.
     """
-
-    # Prepare separate figures for 2D and 3D data (created lazily).
+    # Prepare figure for 2D data (created lazily).
     fig2d = None
     ax2d = None
-    fig3d = None
-    ax3d = None
     # Keep track of created 2D scatter artists for checkbox control.
     scatters2d = []
     labels2d = []  # full labels for legend and internal mapping
