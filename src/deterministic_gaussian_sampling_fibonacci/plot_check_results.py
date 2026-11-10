@@ -94,7 +94,6 @@ def plot_all_results(results: List[Dict[str, Any]]) -> None:
     
     cmap = plt.colormaps["tab20"].resampled(n_runs)
     colors = colors = list(mcolors.TABLEAU_COLORS.values())
-    print(colors)
 
     i = 0
     colorUsed = False
@@ -102,9 +101,6 @@ def plot_all_results(results: List[Dict[str, Any]]) -> None:
         if(colorUsed is True):
             i = i+1
             colorUsed = False
-            print("-----------------------------")
-            print(i)
-            print(colors[i])
         color = colors[i]
         dim = entry.get("dim")
         type_ = entry.get("type")
