@@ -144,7 +144,7 @@ def sample_gaussian_fibonacci_torch(
     type: str = "Fibonacci",
     device: torch.device | str | None = None,
     dtype: torch.dtype | None = None,
-) -> torch.Tensor:
+) -> tuple[torch.Tensor, bool]:
     """Deterministic Gaussian samples using Fibonacci / Frolov grids (torch).
 
     This is a torch‑only counterpart of :func:`sample_gaussian_fibonacci`.
@@ -181,7 +181,7 @@ def sample_gaussian_fibonacci_torch(
     if sample_count < 0:
         raise ValueError("sample_count must be non‑negative")
     if sample_count == 0:
-        return torch.empty((0, mu_t.shape[0]), device=device, dtype=dtype)
+        return torch.empty((0, mu_t.shape[0]), device=device, dtype=dtype), False
 
     # get deterministic uniform grid in [0,1]^dim
     grid = get_uniform_grid(mu_t.shape[0], sample_count, type=type)
@@ -193,18 +193,19 @@ def sample_gaussian_fibonacci_torch(
     grid = torch.from_numpy(norm.ppf(grid))
     grid = grid.to(device=device, dtype=dtype)
     
+    isNone = False
     if sample_count > 1:
             samples = _transform_with_fast_cholesky_covariance_correction_torch(grid, chol)
             if samples is None:
-                print("to None")
+                isNone = True
                 # fallback to eigen decomposition method
                 samples, _, _ = _transform_grid_gaussian_torch(grid, mu_t, chol)
-                return samples
+                return samples, isNone
             # samples = _mean_correction_torch(samples, mu_t)
     else:
         # For single sample, just return the mean (best point estimate)
         samples, _, _ = _transform_grid_gaussian_torch(grid, mu_t, chol)
-    return samples
+    return samples, isNone
 
 
 __all__ = [

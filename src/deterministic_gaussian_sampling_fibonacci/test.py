@@ -19,6 +19,8 @@ means and covariances of the samples produced by
 "close?" summary.
 """
 
+import os
+import pickle
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -29,6 +31,14 @@ from sample_gaus_torch import sample_gaussian_fibonacci_torch
 	
 FIB_TYPES = ["Fibonacci"]
 FIB_DIMS = [2, 3, 4, 5, 6]
+
+# Path where all check_one results will be stored. We keep it in the same
+# directory as this script so both this file and the plotting utility can
+# easily access it.
+RESULTS_FILE = os.path.join(os.path.dirname(__file__), "check_results.pkl")
+
+# In-memory collection of results; written out at the end of main().
+_CHECK_RESULTS = []
 
 
 def check_one(dim: int, type: str, sample_count: int) -> None:
@@ -45,8 +55,8 @@ def check_one(dim: int, type: str, sample_count: int) -> None:
 	A = A + torch.eye(dim) * 1e-9
 	cov_np = (A @ A.mT).numpy()
 
-	orig = sample_gaussian_fibonacci(mu.numpy(), cov_np,sample_count, type)
-	new = sample_gaussian_fibonacci_torch(mu, A, sample_count,type)
+	orig, oIsNone  = sample_gaussian_fibonacci(mu.numpy(), cov_np,sample_count, type)
+	new, nIsNone = sample_gaussian_fibonacci_torch(mu, A, sample_count,type)
 	
 	if(orig is None or new is None):
 		equal = False
@@ -62,20 +72,23 @@ def check_one(dim: int, type: str, sample_count: int) -> None:
 			print("None")
 		else:
 			print(new.numpy())
-	# print("-" * 60)
-	# if(dim==2):
-	# 	points_a = new
-	# 	points_b = orig
 
-	# 	plt.scatter(points_a[:, 0], points_a[:, 1], color="tab:blue", label="Array A")
-	# 	plt.scatter(points_b[:, 0], points_b[:, 1], color="tab:orange", label="Array B")
-
-	# 	plt.xlabel("x")
-	# 	plt.ylabel("y")
-	# 	plt.axis("equal")
-	# 	plt.grid(True)
-	# 	plt.legend()
-	# 	plt.show()
+	# Store this run's data for later analysis/plotting. We keep everything
+	# needed to reproduce the behaviour: A, the two sample arrays (or None),
+	# and the flags/metadata.
+	_CHECK_RESULTS.append(
+		{
+			"dim": dim,
+			"type": type,
+			"sample_count": sample_count,
+			"A": A.detach().cpu().numpy(),
+			"orig": None if orig is None else np.asarray(orig),
+			"new": None if new is None else new.detach().cpu().numpy(),
+			"oIsNone": bool(oIsNone),
+			"nIsNone": bool(nIsNone),
+			"equal": bool(equal),
+		}
+	)
 
 
 def main() -> None:
@@ -84,6 +97,13 @@ def main() -> None:
 		for dim in FIB_DIMS:
 			for sample_count in range(1,10):
 				check_one(dim, type, sample_count)
+
+	# After all runs are finished, persist the collected results to disk so
+	# that they can be analysed/visualised later.
+	if _CHECK_RESULTS:
+		with open(RESULTS_FILE, "wb") as f:
+			pickle.dump(_CHECK_RESULTS, f)
+		print(f"Saved {len(_CHECK_RESULTS)} check_one results to {RESULTS_FILE}")
 
 if __name__ == "__main__":
 	main()

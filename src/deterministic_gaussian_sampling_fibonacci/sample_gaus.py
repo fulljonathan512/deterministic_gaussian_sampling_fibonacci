@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.stats import norm
 
-from .grid_util import get_uniform_grid
+from grid_util import get_uniform_grid
 
 
 SUPPORED_DIM = [2, 3, 4, 5, 6]
@@ -89,7 +89,7 @@ def _check_parameters(mu, cov, LVol, type):
 
 
 
-def sample_gaussian_fibonacci(mu: list | np.ndarray, cov: np.ndarray, sample_count: int = 100, type: str = 'Fibonacci') -> np.ndarray:
+def sample_gaussian_fibonacci(mu: list | np.ndarray, cov: np.ndarray, sample_count: int = 100, type: str = 'Fibonacci') -> tuple[np.ndarray,bool]:
 	"""
 	Generate deterministic Gaussian samples using Fibonacci/Frolov sequences.
 	
@@ -106,7 +106,7 @@ def sample_gaussian_fibonacci(mu: list | np.ndarray, cov: np.ndarray, sample_cou
 	_check_parameters(mu, cov, sample_count, type)
 
 	if sample_count == 0:
-		return np.empty((0, mu.shape[0]))
+		return np.empty((0, mu.shape[0])), False
 
 	dim = mu.shape[0]
 	grid = get_uniform_grid(dim, sample_count, type)
@@ -114,13 +114,15 @@ def sample_gaussian_fibonacci(mu: list | np.ndarray, cov: np.ndarray, sample_cou
 	
 
 	# center for fast cholesky correction
+	isNone = False
 	if sample_count > 1:
 		samples = _transform_with_fast_cholesky_covariance_correction(grid, cov)
 		if samples is None:
+			isNone = True
 			# fallback to eigen decomposition method
 			samples, V, D = _transform_grid_gaussian(grid, mu, cov)
-			return samples
+			return samples, isNone
 		samples = _mean_correction(samples, mu)
 	else:
 		samples, V, D = _transform_grid_gaussian(grid, mu, cov)
-	return samples
+	return samples, isNone
