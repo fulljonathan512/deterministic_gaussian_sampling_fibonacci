@@ -44,12 +44,7 @@ def _transform_grid_gaussian_torch(
         # scale with eigen decomposition of covariance reconstructed from chol
         cov = chol @ chol.mT
         ew, V = torch.linalg.eig(cov)
-        cov = cov.numpy()
-        ew, V = np.linalg.eig(cov)
-        ew = torch.from_numpy(ew)
-        V = torch.from_numpy(V)
         
-        print(ew.dtype)
         D = torch.diag(torch.sqrt(ew))
     
     # eigenvalues are complex in general, but cov is SPD -> imaginary ~ 0
@@ -79,10 +74,7 @@ def _transform_with_fast_cholesky_covariance_correction_torch(
     correction.  The covariance is reconstructed as ``cov = chol @ chol.T``.
     """
     cov = chol @ chol.mT
-    cov = cov.numpy()
-    ew, V = np.linalg.eig(cov)
-    ew = torch.from_numpy(ew)
-    V = torch.from_numpy(V)
+    ew, V = torch.linalg.eig(cov)
     D = torch.diag(torch.sqrt(ew))
     
     # eps = 1e-9
@@ -102,8 +94,6 @@ def _transform_with_fast_cholesky_covariance_correction_torch(
         L_stdD = torch.linalg.cholesky(C_stdD)
         L_stdD_inv = torch.linalg.inv(L_stdD)
         differ = C_stdD - L_stdD @ L_stdD.mT
-        print("Abweichung neu:")
-        print(differ)
     except RuntimeError:
         # In case L_stdD non PD (for example if C is almost 0, or other numerical issues), skip the correction
         return None
