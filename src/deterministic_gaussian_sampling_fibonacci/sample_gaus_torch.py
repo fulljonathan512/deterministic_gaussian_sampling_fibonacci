@@ -201,7 +201,7 @@ def sample_gaussian_fibonacci_torch(
                 # fallback to eigen decomposition method
                 samples, _, _ = _transform_grid_gaussian_torch(grid, mu_t, chol)
                 return samples, isNone
-            # samples = _mean_correction_torch(samples, mu_t)
+            samples = _mean_correction_torch(samples, mu_t)
     else:
         # For single sample, just return the mean (best point estimate)
         samples, _, _ = _transform_grid_gaussian_torch(grid, mu_t, chol)
